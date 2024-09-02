@@ -44,12 +44,18 @@ void loop() {
     switch (button) {
       case 1:
         Serial.print("Button 1:"); Serial.println(value);
-        //digitalWrite(led_pin_1, value);
-        digitalWrite(led_pin_2, LOW);
+        if(value == 0)
+        {
+          digitalWrite(led_pin_1, LOW);
+        }
+        else
+        {
+          digitalWrite(led_pin_1, HIGH);
+        }
         break;
       case 2:
         Serial.print("Button 2:"); Serial.println(value);
-        digitalWrite(led_pin_1, HIGH);
+        digitalWrite(led_pin_2, HIGH);
         break;
       case 3:
         Serial.print("Button 3:"); Serial.println(value);
