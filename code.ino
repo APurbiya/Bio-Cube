@@ -1,10 +1,13 @@
 #include <DHT.h>
 #include <DHT_U.h>
 #include "BluetoothSerial.h" 
+#include <Adafruit_NeoPixel.h>  // Include the NeoPixel library
 
 #define AO_PIN 34
 #define DHTPIN 26
 #define DHTTYPE DHT22
+#define LED_PIN 5      // Pin connected to the LED strip
+#define NUM_LEDS 29    // Number of LEDs in the strip
 
 int i = 0;
 int j = 10000;
@@ -15,6 +18,17 @@ int led_pin_3 = 2;
 
 DHT dht(DHTPIN, DHT22);
 BluetoothSerial ESP_BT; 
+
+// Initialize the NeoPixel strip
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+// Declare the setAllLEDsToRed function before setup()
+void setAllLEDsToRed() {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    strip.setPixelColor(i, strip.Color(255, 0, 0));  // Red color
+  }
+  strip.show();  // Update the strip with new values
+}
 
 void setup() {
   // Start DHT sensor
@@ -32,6 +46,13 @@ void setup() {
   pinMode(led_pin_1, OUTPUT);
   pinMode(led_pin_2, OUTPUT);
   pinMode(led_pin_3, OUTPUT);
+
+  // Initialize the NeoPixel strip
+  strip.begin();
+  strip.show();  // Initialize all pixels to 'off'
+  
+  // Set all LEDs to red at startup
+  setAllLEDsToRed();
 }
 
 void loop() {
@@ -44,12 +65,9 @@ void loop() {
     switch (button) {
       case 1:
         Serial.print("Button 1:"); Serial.println(value);
-        if(value == 0)
-        {
+        if(value == 0) {
           digitalWrite(led_pin_1, LOW);
-        }
-        else
-        {
+        } else {
           digitalWrite(led_pin_1, HIGH);
         }
         break;
@@ -72,11 +90,11 @@ void loop() {
   Serial.print("humidity  "); Serial.println(humidity);
   
   // Send data via Bluetooth instead of Serial
-  ESP_BT.print(temp);
+  ESP_BT.print(1);
   ESP_BT.print("|");
-  ESP_BT.print(humidity);
+  ESP_BT.print(2);
   ESP_BT.print("|");
-  ESP_BT.println(lightValue);
+  ESP_BT.println(3);
   
   delay(1000);  // Delay between sends
 
