@@ -53,13 +53,18 @@ void setup() {
   
   // Set all LEDs to red at startup
   setAllLEDsToRed();
+  //keeping atomizer off
+  digitalWrite(led_pin_1, HIGH);
 }
 
 void loop() {
   // Handle Bluetooth commands
   if (ESP_BT.available()) {
+    //value coming from bluetooth
     incoming = ESP_BT.read(); 
+    //gives tens value from bluetooth
     int button = floor(incoming / 10);
+    //gives ones value from bluetooth
     int value = incoming % 10;
     
     switch (button) {
@@ -67,13 +72,23 @@ void loop() {
         Serial.print("Button 1:"); Serial.println(value);
         if(value == 0) {
           digitalWrite(led_pin_1, LOW);
-        } else {
+          delay(100);
+          digitalWrite(led_pin_1, HIGH);
+          delay(100);
+          digitalWrite(led_pin_1, LOW);
+          delay(100);
+          digitalWrite(led_pin_1, HIGH);
+          
+        } 
+        else {
+          digitalWrite(led_pin_1, LOW);
+          delay(100);
           digitalWrite(led_pin_1, HIGH);
         }
         break;
       case 2:
         Serial.print("Button 2:"); Serial.println(value);
-        digitalWrite(led_pin_2, HIGH);
+        digitalWrite(led_pin_2, LOW);
         break;
       case 3:
         Serial.print("Button 3:"); Serial.println(value);
