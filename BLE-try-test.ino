@@ -9,10 +9,6 @@
   Ported to Arduino ESP32 by Evandro Copercini
 */
 
-// #include <BLEDevice.h>
-// #include <BLEUtils.h>
-// #include <BLEServer.h>
-
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
 
@@ -23,28 +19,61 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
 
+  // Initialize BLE
   BLEDevice::init("MyESP32");
+
+  // Create BLE server
   BLEServer *pServer = BLEDevice::createServer();
+  
+  // Create BLE service
   BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  // Create BLE characteristic
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
                                          BLECharacteristic::PROPERTY_READ |
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
 
+  // Set characteristic value
   pCharacteristic->setValue("Hello World says Neil");
+
+  // Start the service
   pService->start();
-  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+
+  // Get BLE advertising object
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+
+  // Add service UUID to advertising packet
   pAdvertising->addServiceUUID(SERVICE_UUID);
+
+  // Set complete local name for better discoverability on iOS
+  pAdvertising->setCompleteLocalName("MyESP32");
+
+  // Set scan response to true for better detection by iOS devices
   pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+
+  // Functions that help with iPhone connection issues
+  pAdvertising->setMinPreferred(0x06);
   pAdvertising->setMinPreferred(0x12);
+
+  // Set advertising interval to improve discoverability (100 ms)
+  pAdvertising->setInterval(160);  // 160 * 0.625 ms = 100 ms
+
+  // Set transmission power level to maximum for better range and stability
+  pAdvertising->setPowerLevel(ESP_PWR_LVL_P9);  // Maximum power level
+
+  // Disable whitelisting to ensure all devices can discover the ESP32
+  pAdvertising->setScanFilter(false);
+
+  // Start advertising
   BLEDevice::startAdvertising();
+
   Serial.println("Characteristic defined! Now you can read it in your phone!");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // Main code to run repeatedly
   delay(2000);
 }
+
