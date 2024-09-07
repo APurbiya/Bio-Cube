@@ -3,8 +3,8 @@
 #include "BluetoothSerial.h" 
 #include <Adafruit_NeoPixel.h>  // Include the NeoPixel library
 
-#define AO_PIN 34
-#define DHTPIN 26
+#define AO_PIN 13
+#define DHTPIN 19
 #define DHTTYPE DHT22
 #define LED_PIN 5      // Pin connected to the LED strip
 #define NUM_LEDS 29    // Number of LEDs in the strip
@@ -90,11 +90,11 @@ void loop() {
   Serial.print("humidity  "); Serial.println(humidity);
   
   // Send data via Bluetooth instead of Serial
-  ESP_BT.print(1);
+  ESP_BT.print(temp/100);
   ESP_BT.print("|");
-  ESP_BT.print(2);
+  ESP_BT.print(humidity/100);
   ESP_BT.print("|");
-  ESP_BT.println(3);
+  ESP_BT.println(lightValue);
   
   delay(1000);  // Delay between sends
 
