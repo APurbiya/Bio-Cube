@@ -1,6 +1,6 @@
 #include <DHT.h>
 #include <DHT_U.h>
-#include <Adafruit_NeoPixel.h>  
+#include <Adafruit_NeoPixel.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -18,26 +18,27 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define SW_PIN 27
 
 // LED Strip settings
-#define LED_PIN 5
+#define LED_PIN_BASE 5
+#define LED_PIN_TOP 2
 #define NUM_LEDS 29
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN_BASE, NEO_GRB + NEO_KHZ800);
 
 // Sensor and effect pins
 #define DHTPIN 19
-#define LDR_PIN 13
+#define LDR_PIN 12
 #define DHTTYPE DHT22
-#define LED_FOG_PIN 4 
-#define LED_HEATER_PIN 0 
-#define LED_RAIN_PIN 2 
+#define LED_FOG_PIN 4
+#define LED_HEATER_PIN 0
+#define LED_RAIN_PIN 2
 
 DHT dht(DHTPIN, DHTTYPE);
 
 ezButton button(SW_PIN);
 int hour = 0;
 int minute = 0;
-int selection = 0;  // 0 = hour, 1 = minute, 2 = confirm
-int menuSelection = 0;  // 0 = Modes, 1 = Controls
-int modesSelection = 0;  // 0 = Rain, 1 = Fog, 2 = Northern Lights
+int selection = 0; // 0 = hour, 1 = minute, 2 = confirm
+int menuSelection = 0;  // Selection for modes or controls
+int modesSelection = 0;  // Selection inside the modes screen
 bool blinkState = true;
 bool menuBlinkState = true;
 bool inControlScreen = false;
@@ -50,8 +51,8 @@ bool northernLightsActive = false;
 
 unsigned long previousMillis = 0;
 unsigned long menuPreviousMillis = 0;
-const long interval = 500; 
-const long menuInterval = 300; 
+const long interval = 500;
+const long menuInterval = 300;
 
 int lastStateCLK;
 int currentStateCLK;
@@ -76,9 +77,9 @@ void setup() {
   
   // Initialize LED strip
   strip.begin();
-  strip.show();  
-  setAllLEDsToRed();  
-  
+  strip.show();
+  setAllLEDsToRed();
+
   // Initialize effect pins
   pinMode(LED_FOG_PIN, OUTPUT);
   pinMode(LED_HEATER_PIN, OUTPUT);
@@ -97,18 +98,18 @@ void loop() {
         if (selection == 0) hour = (hour + 1) % 24;
         else if (selection == 1) minute = (minute + 1) % 60;
       } else if (inModesScreen) {
-        modesSelection = (modesSelection + 1) % 3;  
+        modesSelection = (modesSelection + 1) % 5;  // There are 5 mode options
       } else {
-        menuSelection = (menuSelection + 1) % 2;  
+        menuSelection = (menuSelection + 1) % 2;  // Modes or Controls
       }
     } else {
       if (!inControlScreen && !inModesScreen) {
         if (selection == 0) hour = (hour - 1 + 24) % 24;
         else if (selection == 1) minute = (minute - 1 + 60) % 60;
       } else if (inModesScreen) {
-        modesSelection = (modesSelection - 1 + 3) % 3;  
+        modesSelection = (modesSelection - 1 + 5) % 5;
       } else {
-        menuSelection = (menuSelection - 1 + 2) % 2;  
+        menuSelection = (menuSelection - 1 + 2) % 2;
       }
     }
   }
@@ -116,21 +117,22 @@ void loop() {
 
   // Button press handling
   if (button.isPressed()) {
+    Serial.println("button press");
     if (!inControlScreen && !inModesScreen) {
-      if (selection == 2) {  
-        inControlScreen = true;  
-        selection = 0;  
+      if (selection == 2) {
+        inControlScreen = true;
+        selection = 0;
       } else {
         selection++;
       }
     } else if (inModesScreen) {
-      toggleMode();  // Toggle the mode selected
+      toggleMode();  // Toggle the selected mode
     } else {
       if (menuSelection == 1) {
-        inControlScreen = false;  
-        showControlsScreen(); 
+        inControlScreen = false;
+        showControlsScreen();
       } else {
-        inModesScreen = true;  
+        inModesScreen = true;
       }
     }
   }
@@ -151,7 +153,9 @@ void loop() {
   else showControlsScreen();
 }
 
+// Display the time-setting screen
 void showTimeScreen() {
+  Serial.println("inTime Screen");
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(WHITE);
@@ -168,28 +172,33 @@ void showTimeScreen() {
   display.display();
 }
 
+// Display the modes screen with scrolling
 void showModesScreen() {
+  Serial.println("inMode Screen");
+  const int optionsCount = 5;  // Total number of options
+  String options[optionsCount] = {"Rain", "Fog", "Northern Lights", "Day Cycle", "Controls"};
+  bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, false, false};
+
+  // Determine which subset of options to display based on the current selection
+  int start = modesSelection / 3 * 3;
+  int end = min(start + 3, optionsCount);
+
   display.clearDisplay();
   display.setTextSize(2);
-  
-  display.setCursor(10, 10);
-  if (modesSelection == 0 && menuBlinkState) display.print("> ");
-  display.print("Rain");
-  if (rainEffectActive) display.print(" [X]");
-  
-  display.setCursor(10, 30);
-  if (modesSelection == 1 && menuBlinkState) display.print("> ");
-  display.print("Fog");
-  if (fogEffectActive) display.print(" [X]");
-  
-  display.setCursor(10, 50);
-  if (modesSelection == 2 && menuBlinkState) display.print("> ");
-  display.print("Northern Lights");
-  if (northernLightsActive) display.print(" [X]");
-  
+
+  // Loop to display the visible subset of options
+  for (int i = start; i < end; i++) {
+    display.setCursor(10, (i - start) * 20 + 10);
+    if (modesSelection == i && menuBlinkState) display.print("> ");
+    display.print(options[i]);
+    if (isActive[i]) display.print(" [X]");
+  }
+
   display.display();
 }
 
+// Display the controls screen with sensor data or error messages
+// Display the controls screen with sensor data or error messages
 void showControlsScreen() {
   display.clearDisplay();
   display.setTextSize(1);
@@ -199,47 +208,71 @@ void showControlsScreen() {
   int lightValue = analogRead(LDR_PIN);
 
   display.setCursor(0, 0);
-  display.print("Temp: "); display.print(temp); display.print(" C");
+  if (isnan(temp)) {
+    display.print("Temp: Error");
+  } else {
+    display.print("Temp: "); 
+    display.print(temp); 
+    display.print(" C");
+  }
+
   display.setCursor(0, 10);
-  display.print("Humidity: "); display.print(humidity); display.print(" %");
+  if (isnan(humidity)) {
+    display.print("Humidity: Error");
+  } else {
+    display.print("Humidity: "); 
+    display.print(humidity); 
+    display.print(" %");
+  }
+
   display.setCursor(0, 20);
-  display.print("Light: "); display.print(lightValue);
+  if (lightValue < 0) {
+    display.print("Light: Error");
+  } else {
+    display.print("Light: "); 
+    display.print(lightValue);
+  }
+
+  // Serial printing of light intensity values
+  Serial.print("Light Intensity: ");
+  Serial.println(lightValue);
 
   display.display();
 }
 
-// Toggle selected mode
+
+// Toggle the selected mode (Rain, Fog, Northern Lights)
 void toggleMode() {
   switch (modesSelection) {
-    case 0: 
+    case 0:  // Rain
       rainEffectActive = !rainEffectActive;
       if (rainEffectActive) runRainEffect();
       else digitalWrite(LED_RAIN_PIN, LOW);
       break;
-    case 1: 
+    case 1:  // Fog
       fogEffectActive = !fogEffectActive;
       if (fogEffectActive) runFogEffect();
       else digitalWrite(LED_FOG_PIN, LOW);
       break;
-    case 2: 
+    case 2:  // Northern Lights
       northernLightsActive = !northernLightsActive;
       if (northernLightsActive) northernLightsEffect(50);
-      else setAllLEDsToRed();  // Reset to red if effect is turned off
+      else setAllLEDsToRed();
       break;
   }
 }
 
-// Runs the rain effect
+// Run the rain effect
 void runRainEffect() {
   digitalWrite(LED_RAIN_PIN, HIGH);
 }
 
-// Runs the fog effect
+// Run the fog effect
 void runFogEffect() {
   digitalWrite(LED_FOG_PIN, HIGH);
 }
 
-// Sets all LEDs to red
+// Set all LEDs to red
 void setAllLEDsToRed() {
   for (int i = 0; i < NUM_LEDS; i++) {
     strip.setPixelColor(i, strip.Color(255, 0, 0));
@@ -249,18 +282,10 @@ void setAllLEDsToRed() {
 
 // Northern lights effect
 void northernLightsEffect(int speed) {
-  uint32_t colors[] = {
-    strip.Color(0, 255, 100), 
-    strip.Color(0, 0, 255),
-    strip.Color(75, 0, 130),
-    strip.Color(238, 130, 238)
-  };
-  
+  uint32_t colors[] = {strip.Color(0, 255, 0), strip.Color(0, 0, 255), strip.Color(255, 0, 255)};
   for (int i = 0; i < NUM_LEDS; i++) {
-    for (int colorIndex = 0; colorIndex < 4; colorIndex++) {
-      strip.setPixelColor(i, colors[colorIndex]);
-      strip.show();
-      delay(speed);
-    }
+    strip.setPixelColor(i, colors[random(0, 3)]);
+    strip.show();
+    delay(speed);
   }
 }
