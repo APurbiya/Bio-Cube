@@ -94,6 +94,7 @@ void setup() {
   digitalWrite(defaultGround, LOW);
   
   digitalWrite(LED_FOG_PIN, HIGH);
+  
 }
 
 void loop() {
@@ -108,16 +109,28 @@ void loop() {
         // Time setting mode
         if (selection == 0) hour = (hour + 1) % 24;
         else if (selection == 1) minute = (minute + 1) % 60;
-      } else if (inModesScreen) {
+      } 
+      else if (inModesScreen) {
         // Mode selection navigation
-        modesSelection = (modesSelection + 1) % 5;  // There are 5 mode options
+        modesSelection = (modesSelection + 1) % 6;  // There are 5 mode options
       }
-    } else {
-      if (!inControlScreen && !inModesScreen) {
+    } 
+    else {
+      if (!inControlScreen && !inModesScreen) 
+      {
         if (selection == 0) hour = (hour - 1 + 24) % 24;
         else if (selection == 1) minute = (minute - 1 + 60) % 60;
-      } else if (inModesScreen) {
-        modesSelection = (modesSelection - 1 + 5) % 5;
+      } 
+      else if (inModesScreen)
+      {
+        if(modesSelection > -1)
+        {
+          modesSelection = (modesSelection -1 );
+        }
+        else
+        {
+          modesSelection = 5;
+        }
       }
     }
   }
@@ -229,9 +242,9 @@ void showTimeScreen() {
 
 // Display the modes screen with scrolling
 void showModesScreen() {
-    const int optionsCount = 5;
-    String options[optionsCount] = {"Rain", "Fog", "Northern Lights", "Day Cycle", "Controls"};
-    bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false};
+    const int optionsCount = 6;
+    String options[optionsCount] = {"Rain", "Fog", "Northern Lights", "Day Cycle", "Controls", "Settings"};
+    bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
 
     display.clearDisplay();
     display.setTextSize(1);
@@ -286,6 +299,10 @@ void toggleMode() {
     case 4:  // Controls Screen
       inModesScreen = false;
       inControlScreen = true;
+      break;
+    case 5:
+      inControlScreen = false;
+      inModesScreen = false;
       break;
   }
 }
