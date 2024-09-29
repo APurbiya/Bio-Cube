@@ -103,8 +103,10 @@ void loop() {
 
   // Rotary encoder handling
   currentStateCLK = digitalRead(CLK_PIN);
-  if (currentStateCLK != lastStateCLK && currentStateCLK == HIGH) {
-    if (digitalRead(DT_PIN) == LOW) {
+  if (currentStateCLK != lastStateCLK) {
+    if(currentStateCLK == HIGH)
+    {
+      if (digitalRead(DT_PIN) == LOW) {
       if (!inControlScreen && !inModesScreen) {
         // Time setting mode
         if (selection == 0) hour = (hour + 1) % 24;
@@ -123,6 +125,7 @@ void loop() {
       } 
       else if (inModesScreen)
       {
+        
         if(modesSelection > -1)
         {
           modesSelection = (modesSelection -1 );
@@ -134,6 +137,50 @@ void loop() {
       }
     }
   }
+  else
+  {
+    if (digitalRead(DT_PIN) == LOW) {
+      if (!inControlScreen && !inModesScreen) {
+        // Time setting mode
+        if (selection == 0) hour = (hour - 1 + 24) % 24;
+        else if (selection == 1) minute = (minute - 1 + 60) % 60;
+      } 
+      else if (inModesScreen) {
+        // Mode selection navigation
+        if(modesSelection > -1)
+        {
+          modesSelection = (modesSelection -1 );
+        }
+        else
+        {
+          modesSelection = 5;
+        }
+      }
+    } 
+    else {
+      if (!inControlScreen && !inModesScreen) 
+      {
+        if (selection == 0) hour = (hour + 1) % 24;
+        else if (selection == 1) minute = (minute + 1) % 60;
+      } 
+      else if (inModesScreen)
+      {
+        /*
+        if(modesSelection > -1)
+        {
+          modesSelection = (modesSelection -1 );
+        }
+        else
+        {
+          modesSelection = 5;
+        }
+        */
+        modesSelection = (modesSelection + 1) % 6;  // There are 5 mode options
+
+      }
+    }
+  }
+}
   lastStateCLK = currentStateCLK;
   lightValue = analogRead(LDR_PIN);
   if (northernLightsActive && counter == 900) 
