@@ -290,7 +290,7 @@ void showTimeScreen() {
 // Display the modes screen with scrolling
 void showModesScreen() {
     const int optionsCount = 6;
-    String options[optionsCount] = {"Rain", "Fog", "Northern Lights", "Day Cycle", "Controls", "Settings"};
+    String options[optionsCount] = {"Rain", "Fog", "Aurora", "Day Cycle", "Controls", "Re-Set Time"};
     bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
 
     display.clearDisplay();
