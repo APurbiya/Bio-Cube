@@ -182,7 +182,8 @@ void loop() {
   }
 }
   lastStateCLK = currentStateCLK;
-  lightValue = analogRead(LDR_PIN);
+  int lightValue1 = analogRead(LDR_PIN);
+  int lightValue = map(lightValue1, 0, 4000, 0, 100);
   if (northernLightsActive && counter == 900) 
   {
     northernLightsEffect(random(25, 100));
@@ -190,7 +191,7 @@ void loop() {
   }
   if (dayCycleActive) 
   {
-    setDayCycleEffect(lightValue);
+    setDayCycleEffect(lightValue, hour, minute);
     //delay(random(200, 700));
   }
   // Button press handling
@@ -242,7 +243,8 @@ void showControlsScreen() {
 
   float temp = dht.readTemperature();
   float humidity = dht.readHumidity();
-  lightValue = analogRead(LDR_PIN);
+  int lightValue1 = analogRead(LDR_PIN);
+  int lightValue = map(lightValue1, 0, 4000, 0, 100);
 
   display.setCursor(0, 0);
   if (isnan(temp)) {
@@ -290,7 +292,7 @@ void showTimeScreen() {
 // Display the modes screen with scrolling
 void showModesScreen() {
     const int optionsCount = 6;
-    String options[optionsCount] = {"Rain", "Fog", "Aurora", "Day Cycle", "Controls", "Re-Set Time"};
+    String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
     bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
 
     display.clearDisplay();
@@ -340,7 +342,7 @@ void toggleMode() {
       break;
     case 3:  // Day Cycle
       dayCycleActive = !dayCycleActive;
-      if (dayCycleActive) setDayCycleEffect(0);
+      if (dayCycleActive) setDayCycleEffect(0, hour, 0);
       else bassOff();
       break;
     case 4:  // Controls Screen
@@ -390,35 +392,145 @@ void northernLightsEffect(int brightness) {
 }
 
 // Placeholder for Day Cycle effect
-void setDayCycleEffect(int poss) {
-  //poss is the intensity of light, 0 means its brightest, and 4000 means its really dark like darkest!
-  if(poss <= 3000)
+void setDayCycleEffect(int brightness, int hour, int minute) 
+{
+  if(hour == 8)
   {
-    for (int i = 0; i < stripTop.numPixels(); i++) 
-    {
-      stripTop.setPixelColor(i, stripTop.Color(255, 255, 0));  // Yellow to simulate daylight
-    }
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    
   }
-  if(poss < 3000 && poss <= 2500)
+  else if(hour == 9)
   {
-    for (int i = 0; i < stripTop.numPixels() - 3; i++) 
-    {
-      stripTop.setPixelColor(i, stripTop.Color(100, 255, 0));  // Yellow to simulate daylight
-    }
-    for (int i = stripTop.numPixels() - 3; i < stripTop.numPixels(); i++) 
-    {
-      stripTop.setPixelColor(i, stripTop.Color(100, 20, 0));  // Yellow to simulate daylight
-    }
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
-  if(poss > 2500)
+  else if(hour == 10)
   {
-    for (int i = 0; i < stripTop.numPixels(); i++) 
-    {
-      stripTop.setPixelColor(i, stripTop.Color(200, 20, 20));  // Yellow to simulate daylight
-    }
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 11)
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 12)
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 13)//1 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 14)//2 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 15)//3 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 16)//4 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 17)//5 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
+  else if(hour == 18)//6 o clock
+  {
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
   
   
+  
+  strip.setBrightness(brightness);
   stripTop.show();
 }
 
