@@ -396,107 +396,101 @@ void northernLightsEffect(int brightness) {
 // Placeholder for Day Cycle effect
 void setDayCycleEffect(int brightness, int hour, int minute)
 {
-  if(hour >= 6 && hour < 8)
+  if(hour >= 6 && hour < 8) // Sunrise
   {
-    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));// right most
-    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(2, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));// left most
-
+    stripTop.setPixelColor(0, stripTop.Color(255, 170, 0));  // Right most - Sunrise (orange)
+    stripTop.setPixelColor(1, stripTop.Color(255, 190, 50)); // Slightly lighter orange
+    stripTop.setPixelColor(2, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(6, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(7, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(8, stripTop.Color(255, 255, 255)); // Bright white
   }
-  else if(hour >= 8 && hour < 10)
+  else if(hour >= 8 && hour < 10) // Mid-morning
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(3, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 255)); // Right most - Bright white
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(4, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 190, 50));  // Lighter orange
+    stripTop.setPixelColor(6, stripTop.Color(255, 170, 0));   // Fading to orange
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
   }
-  else if(hour >= 10 && hour < 12)
+  else if(hour >= 10 && hour < 12) // Late morning
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(4, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 255)); // Right most - Bright white
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(6, stripTop.Color(255, 190, 50));  // Lighter orange
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
   }
-  else if(hour >= 12 && hour < 14)
+  else if(hour >= 12 && hour < 14) // Midday
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(3, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(5, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 255)); // Right most - Bright white
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(6, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
   }
-  else if(hour >= 14 && hour < 16)//2 o clock
+  else if(hour >= 14 && hour < 16) // Early afternoon
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(5, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(6, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 255)); // Right most - Bright white
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(2, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setPixelColor(3, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(4, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 190, 50));  // Lighter orange
+    stripTop.setPixelColor(6, stripTop.Color(255, 170, 0));   // Fading to orange
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
   }
-  else if(hour >= 16 && hour < 18)//4 o clock
+  else if(hour >= 16 && hour < 18) // Late afternoon
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(5, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(6, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(7, stripTop.Color(255, 255, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 255, 207)); // Right most - Soft yellow
+    stripTop.setPixelColor(1, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(2, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(3, stripTop.Color(255, 190, 50));  // Lighter orange
+    stripTop.setPixelColor(4, stripTop.Color(255, 170, 0));   // Fading to orange
+    stripTop.setPixelColor(5, stripTop.Color(255, 120, 0));   // Darker orange
+    stripTop.setPixelColor(6, stripTop.Color(255, 70, 0));    // Dark orange
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
   }
-  else if(hour == 18)//6 o clock
+  else if(hour == 18) // Sunset
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(6, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(7, stripTop.Color(255, 255, 207));
-    stripTop.setPixelColor(8, stripTop.Color(255, 255, 0));
+    stripTop.setPixelColor(0, stripTop.Color(255, 120, 0));   // Right most - Dark orange
+    stripTop.setPixelColor(1, stripTop.Color(255, 70, 0));    // Darker orange
+    stripTop.setPixelColor(2, stripTop.Color(255, 70, 0));    // Same orange
+    stripTop.setPixelColor(3, stripTop.Color(255, 120, 0));   // Transition orange
+    stripTop.setPixelColor(4, stripTop.Color(255, 170, 0));   // Fading orange
+    stripTop.setPixelColor(5, stripTop.Color(255, 190, 50));  // Lighter orange
+    stripTop.setPixelColor(6, stripTop.Color(255, 210, 100)); // Transition towards yellow
+    stripTop.setPixelColor(7, stripTop.Color(255, 255, 150)); // Brighter yellow
+    stripTop.setPixelColor(8, stripTop.Color(255, 255, 207)); // Soft yellow
   }
-  else if(hour < 18 && hour > 6)
+  else if(hour < 6 || hour > 18) // Night
   {
-    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
-    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+    for (int i = 0; i < 9; i++) {
+      stripTop.setPixelColor(i, stripTop.Color(0, 0, 0)); // Turn off all LEDs
+    }
   }
 
   stripTop.setBrightness(brightness);
   stripTop.show();
 }
+
 
 // Set all LEDs to red (default)
 void setAllLEDsToRed() {
