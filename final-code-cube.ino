@@ -396,7 +396,7 @@ void northernLightsEffect(int brightness) {
 // Placeholder for Day Cycle effect
 void setDayCycleEffect(int brightness, int hour, int minute)
 {
-  if(hour == 6)
+  if(hour >= 6 && hour < 8)
   {
     stripTop.setPixelColor(0, stripTop.Color(255, 255, 207));// right most
     stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
@@ -409,7 +409,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));// left most
 
   }
-  else if(hour == 8)
+  else if(hour >= 8 && hour < 10)
   {
     stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(1, stripTop.Color(255, 255, 207));
@@ -421,7 +421,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
-  else if(hour == 10)
+  else if(hour >= 10 && hour < 12)
   {
     stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
@@ -433,7 +433,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
-  else if(hour == 12)
+  else if(hour >= 12 && hour < 14)
   {
     stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
@@ -445,7 +445,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
-  else if(hour == 14)//2 o clock
+  else if(hour >= 14 && hour < 16)//2 o clock
   {
     stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
@@ -457,7 +457,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
   }
-  else if(hour == 16)//4 o clock
+  else if(hour >= 16 && hour < 18)//4 o clock
   {
     stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
     stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
@@ -481,8 +481,20 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(7, stripTop.Color(255, 255, 207));
     stripTop.setPixelColor(8, stripTop.Color(255, 255, 0));
   }
+  else if(hour < 18 && hour > 6)
+  {
+    stripTop.setPixelColor(0, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(1, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(2, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(3, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(4, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(5, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(6, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));
+    stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));
+  }
 
-  strip.setBrightness(brightness);
+  stripTop.setBrightness(brightness);
   stripTop.show();
 }
 
