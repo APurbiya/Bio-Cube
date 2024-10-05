@@ -184,6 +184,8 @@ void loop() {
   lastStateCLK = currentStateCLK;
   int lightValue1 = analogRead(LDR_PIN);
   int lightValue = map(lightValue1, 0, 4000, 0, 100);
+  Serial.println(lightValue1);
+  Serial.print(lightValue);
   if (northernLightsActive && counter == 900) 
   {
     northernLightsEffect(random(25, 100));
