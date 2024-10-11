@@ -27,7 +27,7 @@ Adafruit_NeoPixel stripTop = Adafruit_NeoPixel(9, LED_PIN_TOP, NEO_GRB + NEO_KHZ
 // Sensor and effect pins
 #define DHTPIN 19
 #define LDR_PIN 12
-#define DHTTYPE DHT22
+#define DHTTYPE DHT11
 #define LED_FOG_PIN 4
 #define LED_HEATER_PIN 0
 #define defaultGround 16
@@ -326,14 +326,34 @@ void toggleMode() {
       //digitalWrite(LED_HEATER_PIN, rainEffectActive ? HIGH : LOW);
       break;
     case 1:  // Fog
-      fogEffectActive = !fogEffectActive;
+      
       if(fogEffectActive)
       {
-        runFogEffect(true);
+        Serial.println("Active");
+        //runFogEffect(true);
+        //fogEffectActive = !fogEffectActive;
+        digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON
+        delay(1000);                      // Keep it ON for 1 second
+        digitalWrite(LED_FOG_PIN, HIGH);
+        fogEffectActive = !fogEffectActive;
+        modesSelection++;
+        
       }
       else
       {
-        runFogEffect(false);
+        Serial.println("Not Active");
+        //runFogEffect(false);
+        //fogEffectActive = !fogEffectActive;
+        digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON
+        delay(500);                       // Keep it ON for 0.5 second
+        digitalWrite(LED_FOG_PIN, HIGH);  // Turn fogger OFF for 0.5 second
+        delay(500);
+        digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON for 0.5 second again
+        delay(500);
+        digitalWrite(LED_FOG_PIN, HIGH);  // Turn fogger OFF
+        fogEffectActive = !fogEffectActive;
+        modesSelection--;
+        
       }
       //digitalWrite(LED_FOG_PIN, fogEffectActive ? HIGH : LOW);
       break;
@@ -368,11 +388,9 @@ void runFogEffect(bool state) {
   
   if(state == true) {
     // Corresponds to serial input '1'
-    digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON
-    delay(1000);                      // Keep it ON for 1 second
-    digitalWrite(LED_FOG_PIN, HIGH);  // Turn fogger OFF
+      // Turn fogger OFF
   }
-  else {
+  else if(state == false) {
     // Corresponds to serial input '0'
     digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON
     delay(500);                       // Keep it ON for 0.5 second
