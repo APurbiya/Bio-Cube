@@ -38,6 +38,7 @@ ezButton button(SW_PIN);
 
 int hour = 0;
 int minute = 0;
+int seconds = 0;
 int selection = 0; // 0 = hour, 1 = minute, 2 = confirm
 int menuSelection = 0;  // Selection for modes or controls
 int modesSelection = 0;  // Selection inside the modes screen
@@ -184,8 +185,8 @@ void loop() {
   lastStateCLK = currentStateCLK;
   int lightValue1 = analogRead(LDR_PIN);
   int lightValue = map(lightValue1, 0, 4000, 0, 100);
-  Serial.println(lightValue1);
-  Serial.print(lightValue);
+  //Serial.println(lightValue1);
+  //Serial.print(lightValue);
   if (northernLightsActive && counter == 900) 
   {
     northernLightsEffect(random(25, 100));
@@ -236,6 +237,33 @@ void loop() {
   }
 
   counter++;
+  seconds ++;
+  if(seconds/50 == 60)
+  {
+    seconds = 0;
+    if(minute != 60)
+    {
+      minute++;
+    }
+    else
+    {
+      minute = 0;
+      if(hour != 24)
+      {
+        hour++;
+      }
+      else
+      {
+        hour == 0;
+      }
+      
+    }  
+  }
+  Serial.print(hour);
+  Serial.print(" : ");
+  Serial.print(minute);
+  Serial.print(" : ");
+  Serial.println(seconds/50);
 }
 
 // Display the controls screen with sensor data
