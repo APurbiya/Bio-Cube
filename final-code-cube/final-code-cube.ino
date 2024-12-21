@@ -5,6 +5,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ezButton.h>
+#include <RTClib.h>
+
+RTC_DS3231 rtc;
 
 // OLED settings
 #define SCREEN_WIDTH 128
@@ -39,10 +42,14 @@ ezButton button(SW_PIN);
 int hour = 0;
 int minute = 0;
 int seconds = 0;
+int year = 2024;
+int month = 12;
+int day = 20;
 int selection = 0; // 0 = hour, 1 = minute, 2 = confirm
 int menuSelection = 0;  // Selection for modes or controls
 int modesSelection = 0;  // Selection inside the modes screen
 int counter = 0;
+int randInt = 0;
 bool blinkState = true;
 bool menuBlinkState = true;
 bool inControlScreen = false;
@@ -59,9 +66,14 @@ unsigned long previousMillis = 0;
 unsigned long menuPreviousMillis = 0;
 const long interval = 500;
 const long menuInterval = 300;
-
+DateTime now;
 int lastStateCLK;
 int currentStateCLK;
+int lightCounter = 0;
+const int optionsCount = 6;
+String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
+bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
+
 
 void setup() {
   Serial.begin(9600);
@@ -71,6 +83,12 @@ void setup() {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;);
   }
+  if (! rtc.begin()) {
+    Serial.println("RTC module is NOT found");
+    Serial.flush();
+    while (1);
+  }
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   // Initialize Rotary encoder and button
   pinMode(CLK_PIN, INPUT);
@@ -84,21 +102,33 @@ void setup() {
   // Initialize LED strip
   strip.begin();
   strip.show();
-  setAllLEDsToRed();
+  //setAllLEDsToRed();
 
-  // Initialize effect pins
+// Initialize effect pins
   pinMode(LED_FOG_PIN, OUTPUT);
   pinMode(LED_HEATER_PIN, OUTPUT);
   pinMode(defaultGround, OUTPUT);
   //pinMode(LED_RAIN_PIN, OUTPUT);
   digitalWrite(LED_HEATER_PIN, LOW);
+  digitalWrite(LED_HEATER_PIN, HIGH);
   digitalWrite(defaultGround, LOW);
   
   digitalWrite(LED_FOG_PIN, HIGH);
+  now = rtc.now();
+  hour = 0;
+  minute = 0;
+  now = rtc.now();
+  hour = now.hour();
+  minute = now.minute();
+  seconds = now.second();
+  minute += 2;
+  //dayCycleActive = false;
   
 }
 
 void loop() {
+  //DateTime now = rtc.now();
+  
   button.loop();
   unsigned long currentMillis = millis();
 
@@ -110,8 +140,8 @@ void loop() {
       if (digitalRead(DT_PIN) == LOW) {
       if (!inControlScreen && !inModesScreen) {
         // Time setting mode
-        if (selection == 0) hour = (hour + 1) % 24;
-        else if (selection == 1) minute = (minute + 1) % 60;
+        // if (selection == 0) hour = (hour + 1) % 24;
+        // else if (selection == 1) minute = (minute + 1) % 60;
       } 
       else if (inModesScreen) {
         // Mode selection navigation
@@ -121,8 +151,8 @@ void loop() {
     else {
       if (!inControlScreen && !inModesScreen) 
       {
-        if (selection == 0) hour = (hour - 1 + 24) % 24;
-        else if (selection == 1) minute = (minute - 1 + 60) % 60;
+        //if (selection == 0) hour = (hour - 1 + 24) % 24;
+        //else if (selection == 1) minute = (minute - 1 + 60) % 60;
       } 
       else if (inModesScreen)
       {
@@ -143,8 +173,8 @@ void loop() {
     if (digitalRead(DT_PIN) == LOW) {
       if (!inControlScreen && !inModesScreen) {
         // Time setting mode
-        if (selection == 0) hour = (hour - 1 + 24) % 24;
-        else if (selection == 1) minute = (minute - 1 + 60) % 60;
+        //if (selection == 0) hour = (hour - 1 + 24) % 24;
+        //else if (selection == 1) minute = (minute - 1 + 60) % 60;
       } 
       else if (inModesScreen) {
         // Mode selection navigation
@@ -161,8 +191,8 @@ void loop() {
     else {
       if (!inControlScreen && !inModesScreen) 
       {
-        if (selection == 0) hour = (hour + 1) % 24;
-        else if (selection == 1) minute = (minute + 1) % 60;
+        //if (selection == 0) hour = (hour + 1) % 24;
+        //else if (selection == 1) minute = (minute + 1) % 60;
       } 
       else if (inModesScreen)
       {
@@ -184,12 +214,21 @@ void loop() {
 }
   lastStateCLK = currentStateCLK;
   int lightValue1 = analogRead(LDR_PIN);
-  int lightValue = map(lightValue1, 0, 4000, 0, 100);
-  //Serial.println(lightValue1);
-  //Serial.print(lightValue);
-  if (northernLightsActive && counter == 900) 
+  int lightValue = map(lightValue1, 0, 4000, 100, 0);
+  if(lightValue <= 30)
   {
-    northernLightsEffect(random(25, 100));
+    bassOff();
+  }
+  Serial.print("counter ");
+  Serial.print(counter);
+  Serial.print("     randInt ");
+  Serial.println(randInt);
+  if (northernLightsActive && counter == randInt) 
+  {
+    northernLightsEffect(lightValue, lightCounter);
+    lightCounter++;
+    randInt = random(500, 1001);
+    counter = 0;
     //delay(random(200, 700));
   }
   if (dayCycleActive) 
@@ -238,7 +277,7 @@ void loop() {
 
   counter++;
   seconds ++;
-  if(seconds/50 == 60)
+  if(seconds/36 == 60)
   {
     seconds = 0;
     if(minute != 60)
@@ -259,11 +298,15 @@ void loop() {
       
     }  
   }
-  Serial.print(hour);
-  Serial.print(" : ");
-  Serial.print(minute);
-  Serial.print(" : ");
-  Serial.println(seconds/50);
+  rtc.adjust(DateTime(year, month, day, hour, minute, seconds));
+  
+  // Serial.print(hour);
+  // Serial.print(" : ");
+  // Serial.print(minute);
+  // Serial.print(" : ");
+  // Serial.println(seconds/36);
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  
 }
 
 // Display the controls screen with sensor data
@@ -274,7 +317,7 @@ void showControlsScreen() {
   float temp = dht.readTemperature();
   float humidity = dht.readHumidity();
   int lightValue1 = analogRead(LDR_PIN);
-  int lightValue = map(lightValue1, 0, 4000, 0, 100);
+  int lightValue = map(lightValue1, 0, 4000, 100, 0);
 
   display.setCursor(0, 0);
   if (isnan(temp)) {
@@ -298,6 +341,14 @@ void showControlsScreen() {
   display.print("Light: "); 
   display.print(lightValue);
 
+  display.setCursor(0, 40);
+  display.print(hour);
+  display.print(" : ");
+  display.print(minute); 
+  //display.print(" : ");
+  //display.print(seconds/36); 
+  
+
   display.display();
 }
 
@@ -307,24 +358,23 @@ void showTimeScreen() {
   display.setTextSize(2);
   display.setTextColor(WHITE);
   display.setCursor(20, 10);
-  display.print("SET TIME");
+  display.print("TIME");
   display.setCursor(20, 40);
 
-  if (selection == 0 && blinkState) display.print("  :");
-  else display.print((hour < 10 ? "0" : "") + String(hour) + ":");
-
-  if (selection == 1 && blinkState) display.print("  ");
-  else display.print((minute < 10 ? "0" : "") + String(minute));
-
+  display.print((hour));
+  display.print((" : "));
+  display.print((minute));
   display.display();
 }
 
 // Display the modes screen with scrolling
 void showModesScreen() {
-    const int optionsCount = 6;
-    String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
-    bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
+   const int optionsCount = 6;
+  String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
+  bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
+    //isActive[6] = {true, false, true, true, false, false};
 
+    
     display.clearDisplay();
     display.setTextSize(1);
 
@@ -398,13 +448,29 @@ void toggleMode() {
       break;
     case 2:  // Northern Lights
       northernLightsActive = !northernLightsActive;
-      if (northernLightsActive) northernLightsEffect(50);
+      if (northernLightsActive) 
+      {
+        northernLightsEffect(50,1);
+        counter = -50;
+      }
       else setAllLEDsToRed();
       break;
     case 3:  // Day Cycle
-      dayCycleActive = !dayCycleActive;
-      if (dayCycleActive) setDayCycleEffect(0, hour, 0);
-      else bassOff();
+      
+      if (dayCycleActive) 
+      {
+        
+        setDayCycleEffect(0, hour, 0);
+        dayCycleActive = !dayCycleActive;
+        modesSelection++;
+      }
+      else 
+      {
+        topOff();
+        dayCycleActive = !dayCycleActive;
+        modesSelection--;
+      }
+      
       break;
     case 4:  // Controls Screen
       inModesScreen = false;
@@ -442,13 +508,21 @@ void runFogEffect(bool state) {
 }
 
 // Simulate the Northern Lights effect
-void northernLightsEffect(int brightness) {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, strip.Color(random(0, 255), random(0, 255), random(0, 255)));
+void northernLightsEffect(int brightness, int counter) {
+  // Shift colors up by one pixel
+  for (int i = strip.numPixels() - 1; i > 0; i--) {
+    uint32_t color = strip.getPixelColor(i - 1); // Get color of the previous pixel
+    strip.setPixelColor(i, color);              // Set it to the current pixel
   }
+
+  // Assign a new random color to pixel 0
+  strip.setPixelColor(0, strip.Color(random(50, 200), random(0, 255), random(50, 255)));
+
+  // Set brightness and display the changes
   strip.setBrightness(brightness);
   strip.show();
 }
+
 
 // Placeholder for Day Cycle effect
 void setDayCycleEffect(int brightness, int hour, int minute)
@@ -459,11 +533,11 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(1, stripTop.Color(255, 190, 50)); // Slightly lighter orange
     stripTop.setPixelColor(2, stripTop.Color(255, 210, 100)); // Transition towards yellow
     stripTop.setPixelColor(3, stripTop.Color(255, 255, 150)); // Brighter yellow
-    stripTop.setPixelColor(4, stripTop.Color(255, 255, 207)); // Soft yellow
-    stripTop.setPixelColor(5, stripTop.Color(255, 255, 255)); // Bright white
-    stripTop.setPixelColor(6, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(4, stripTop.Color(255, 255, 150)); // Soft yellow
+    stripTop.setPixelColor(5, stripTop.Color(255, 255, 207)); // Bright white
+    stripTop.setPixelColor(6, stripTop.Color(255, 255, 207)); // Bright white
     stripTop.setPixelColor(7, stripTop.Color(255, 255, 255)); // Bright white
-    stripTop.setPixelColor(8, stripTop.Color(255, 255, 255)); // Bright white
+    stripTop.setPixelColor(8, stripTop.Color(100, 100, 100)); // Bright white
   }
   else if(hour >= 8 && hour < 10) // Mid-morning
   {
@@ -542,6 +616,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     for (int i = 0; i < 9; i++) {
       stripTop.setPixelColor(i, stripTop.Color(0, 0, 0)); // Turn off all LEDs
     }
+    bassOff();
   }
 
   stripTop.setBrightness(brightness);
@@ -558,8 +633,14 @@ void setAllLEDsToRed() {
 }
 
 void bassOff() {
-  for (int i = 0; i < stripTop.numPixels(); i++) {
-    stripTop.setPixelColor(i, stripTop.Color(0, 0, 0));
+  for (int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, 0));
   }
-  stripTop.show();
+  strip.show();
+}
+void topOff() {
+  for (int i = 0; i < stripTop.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, 0));
+  }
+  strip.show();
 }
