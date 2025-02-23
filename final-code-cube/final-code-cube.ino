@@ -30,6 +30,7 @@ Adafruit_NeoPixel stripTop = Adafruit_NeoPixel(9, LED_PIN_TOP, NEO_GRB + NEO_KHZ
 // Sensor and effect pins
 #define DHTPIN 19
 #define LDR_PIN 12
+#define FAN_PIN 18
 #define DHTTYPE DHT11
 #define LED_FOG_PIN 4
 #define LED_HEATER_PIN 16
@@ -61,9 +62,13 @@ bool rainEffectActive = false;
 bool fogEffectActive = false;
 bool northernLightsActive = false;
 bool dayCycleActive = false;
+bool lightActive = false;
+bool rtcStart = false;
 
-unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0;
 unsigned long menuPreviousMillis = 0;
+unsigned long previousMillis = 0; // To track elapsed time
+const unsigned long oneSecond = 1000; // One second in milliseconds
 const long interval = 500;
 const long menuInterval = 300;
 DateTime now;
@@ -72,11 +77,17 @@ int currentStateCLK;
 int lightCounter = 0;
 const int optionsCount = 6;
 String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
-bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
+//bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, lightActive};
 
 
 void setup() {
   Serial.begin(9600);
+
+  strip.begin();
+  strip.show();
+  stripTop.begin();
+  
+  stripTop.show();
 
   // Initialize OLED display
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -86,9 +97,26 @@ void setup() {
   if (! rtc.begin()) {
     Serial.println("RTC module is NOT found");
     Serial.flush();
-    while (1);
+    //while (1);
   }
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  else
+  {
+    rtcStart = true;
+  }
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  Serial.println("time set");
+
+  
+  // Check if the RTC lost power and reset time if needed
+
+  if (rtc.lostPower()) {
+
+    Serial.println("RTC lost power, setting the time to compile-time.");
+    Serial.println("");
+
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // Set RTC to compile-time
+
+  }
 
   // Initialize Rotary encoder and button
   pinMode(CLK_PIN, INPUT);
@@ -100,18 +128,20 @@ void setup() {
   dht.begin();
   
   // Initialize LED strip
-  strip.begin();
-  strip.show();
+  
+
   //setAllLEDsToRed();
 
 // Initialize effect pins
   pinMode(LED_FOG_PIN, OUTPUT);
   pinMode(LED_HEATER_PIN, OUTPUT);
   pinMode(defaultGround, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
   //pinMode(LED_RAIN_PIN, OUTPUT);
   digitalWrite(LED_HEATER_PIN, LOW);
-  digitalWrite(LED_HEATER_PIN, HIGH);
+  digitalWrite(LED_HEATER_PIN, LOW);
   digitalWrite(defaultGround, LOW);
+  digitalWrite(FAN_PIN, HIGH);
   
   digitalWrite(LED_FOG_PIN, HIGH);
   now = rtc.now();
@@ -214,15 +244,12 @@ void loop() {
 }
   lastStateCLK = currentStateCLK;
   int lightValue1 = analogRead(LDR_PIN);
-  int lightValue = map(lightValue1, 0, 4000, 100, 0);
-  if(lightValue <= 30)
-  {
-    bassOff();
-  }
-  Serial.print("counter ");
-  Serial.print(counter);
-  Serial.print("     randInt ");
-  Serial.println(randInt);
+  int lightValue = map(lightValue1, -10, 4000, 100, 3);
+  
+  //Serial.print("counter ");
+  //Serial.print(counter);
+  //Serial.print("     randInt ");
+  //Serial.println(randInt);
   if (northernLightsActive && counter == randInt) 
   {
     northernLightsEffect(lightValue, lightCounter);
@@ -236,6 +263,10 @@ void loop() {
     setDayCycleEffect(lightValue, hour, minute);
     //delay(random(200, 700));
   }
+  // if(lightActive || dayCycleActive)
+  // {
+  //     topOff();
+  // }
   // Button press handling
   if (button.isPressed()) {
     if (!inControlScreen && !inModesScreen) {
@@ -276,29 +307,35 @@ void loop() {
   }
 
   counter++;
-  seconds ++;
-  if(seconds/36 == 60)
+  //seconds ++;
+  // Increment seconds every 1000ms (1 second)
+  unsigned long currentMillis1 = millis();
+
+  // Check if one second has passed
+  if (currentMillis1 - previousMillis1 >= oneSecond) 
   {
-    seconds = 0;
-    if(minute != 60)
-    {
+    previousMillis1 = currentMillis1; // Update the last recorded time
+
+    // Increment the seconds
+    seconds++;
+
+    // Handle overflow for seconds and minutes
+    if (seconds >= 60) {
+      seconds = 0;
       minute++;
     }
-    else
-    {
+    if (minute >= 60) {
       minute = 0;
-      if(hour != 24)
-      {
-        hour++;
-      }
-      else
-      {
-        hour == 0;
-      }
-      
-    }  
+      hour++;
+    }
+    if (hour >= 24) {
+      hour = 0;
+    }
+
+    // Print the updated time to the Serial Monitor
+    Serial.printf("Time: %02d:%02d:%02d\n", hour, minute, seconds);
   }
-  rtc.adjust(DateTime(year, month, day, hour, minute, seconds));
+  //rtc.adjust(DateTime(year, month, day, hour, minute, seconds));
   
   // Serial.print(hour);
   // Serial.print(" : ");
@@ -306,6 +343,38 @@ void loop() {
   // Serial.print(" : ");
   // Serial.println(seconds/36);
   //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  float humidity = dht.readHumidity();
+  float temp = dht.readTemperature();
+  if(hour == 6 && minute == 45 && humidity <= 60 && fogEffectActive == false)
+  {
+    modesSelection = 1;
+    toggleMode();  
+  }
+  if(hour == 6 && minute == 50 && humidity > 60 && fogEffectActive == true)
+  {
+    modesSelection = 1;
+    toggleMode();  
+  }
+
+  if(hour == 6 && minute == 30 && temp <= 25 && rainEffectActive == false)
+  {
+    modesSelection = 0;
+    toggleMode();  
+  }
+  if(hour == 6 && minute == 45 && temp > 25 && rainEffectActive == true)
+  {
+    modesSelection = 0;
+    toggleMode();  
+  }
+
+  // if (Serial.available() > 0) 
+  // {
+  //   String input = Serial.readStringUntil('\n');
+  //   hour = input.substring(0, 2).toInt();
+  //   minute = input.substring(3, 5).toInt();
+  //   seconds = input.substring(6, 8).toInt();
+
+  // }
   
 }
 
@@ -317,7 +386,7 @@ void showControlsScreen() {
   float temp = dht.readTemperature();
   float humidity = dht.readHumidity();
   int lightValue1 = analogRead(LDR_PIN);
-  int lightValue = map(lightValue1, 0, 4000, 100, 0);
+  int lightValue = map(lightValue1, -10, 4000, 100, 3);
 
   display.setCursor(0, 0);
   if (isnan(temp)) {
@@ -370,8 +439,8 @@ void showTimeScreen() {
 // Display the modes screen with scrolling
 void showModesScreen() {
    const int optionsCount = 6;
-  String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Re-Set Time"};
-  bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, false};
+  String options[optionsCount] = {"Rain", "Fog", "Aurora ", "Day Cycle", "Controls", "Light Up"};
+  bool isActive[optionsCount] = {rainEffectActive, fogEffectActive, northernLightsActive, dayCycleActive, false, lightActive};
     //isActive[6] = {true, false, true, true, false, false};
 
     
@@ -396,7 +465,7 @@ void toggleMode() {
       if(rainEffectActive)
       {
         Serial.println("Active");
-        digitalWrite(LED_HEATER_PIN, HIGH);
+        digitalWrite(LED_HEATER_PIN, LOW);
         rainEffectActive = !rainEffectActive;
         modesSelection++;
       }
@@ -405,7 +474,7 @@ void toggleMode() {
         Serial.println("Not Active");
         //runFogEffect(false);
         //fogEffectActive = !fogEffectActive;
-        digitalWrite(LED_HEATER_PIN, LOW);   // Turn fogger ON
+        digitalWrite(LED_HEATER_PIN, HIGH);   // Turn fogger ON
         rainEffectActive = !rainEffectActive;
         modesSelection--;
         
@@ -422,6 +491,7 @@ void toggleMode() {
         digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON
         delay(1000);                      // Keep it ON for 1 second
         digitalWrite(LED_FOG_PIN, HIGH);
+        digitalWrite(FAN_PIN, HIGH);
         fogEffectActive = !fogEffectActive;
         modesSelection++;
         modesSelection++;
@@ -439,6 +509,7 @@ void toggleMode() {
         digitalWrite(LED_FOG_PIN, LOW);   // Turn fogger ON for 0.5 second again
         delay(500);
         digitalWrite(LED_FOG_PIN, HIGH);  // Turn fogger OFF
+        digitalWrite(FAN_PIN, LOW);
         fogEffectActive = !fogEffectActive;
         modesSelection--;
         modesSelection--;
@@ -450,10 +521,18 @@ void toggleMode() {
       northernLightsActive = !northernLightsActive;
       if (northernLightsActive) 
       {
-        northernLightsEffect(50,1);
+        //northernLightsEffect(50,1);
+        for (int i = strip.numPixels() - 1; i > 0; i--) 
+        {
+        strip.setPixelColor(i, strip.Color(random(50, 200), random(0, 255), random(50, 255)));
+
+        // Set brightness and display the changes
+        strip.setBrightness(80);
+        }
+        strip.show();
         counter = -50;
       }
-      else setAllLEDsToRed();
+      else bassOff();
       break;
     case 3:  // Day Cycle
       
@@ -477,8 +556,29 @@ void toggleMode() {
       inControlScreen = true;
       break;
     case 5:
-      inControlScreen = false;
-      inModesScreen = false;
+      lightActive = !lightActive;
+      if (lightActive) 
+      {
+        stripTop.setPixelColor(0, stripTop.Color(255, 120, 0));   // Right most - Dark orange
+        stripTop.setPixelColor(1, stripTop.Color(255, 70, 0));    // Darker orange
+        stripTop.setPixelColor(2, stripTop.Color(255, 70, 0));    // Same orange
+        stripTop.setPixelColor(3, stripTop.Color(255, 120, 0));   // Transition orange
+        stripTop.setPixelColor(4, stripTop.Color(255, 170, 0));   // Fading orange
+        stripTop.setPixelColor(5, stripTop.Color(255, 190, 50));  // Lighter orange
+        stripTop.setPixelColor(6, stripTop.Color(255, 210, 100)); // Transition towards yellow
+        stripTop.setPixelColor(7, stripTop.Color(255, 255, 150)); // Brighter yellow
+        stripTop.setPixelColor(8, stripTop.Color(255, 255, 207)); // Soft yellow
+        stripTop.setBrightness(50);
+        stripTop.show();
+      }
+      else
+      {
+        for (int i = 0; i < stripTop.numPixels(); i++) 
+        {
+          strip.setPixelColor(i, strip.Color(0, 0, 0));
+        }
+        strip.show();
+      }
       break;
   }
 }
@@ -508,19 +608,88 @@ void runFogEffect(bool state) {
 }
 
 // Simulate the Northern Lights effect
+// void northernLightsEffect(int brightness, int counter) {
+//   // Shift colors up by one pixel
+//   for (int i = strip.numPixels() - 1; i > 0; i--) {
+//     uint32_t color = strip.getPixelColor(i - 1); // Get color of the previous pixel
+//     strip.setPixelColor(i, color);              // Set it to the current pixel
+//   }
+
+//   // Assign a new random color to pixel 0
+//   strip.setPixelColor(0, strip.Color(random(50, 200), random(0, 255), random(50, 255)));
+
+//   // Set brightness and display the changes
+//   strip.setBrightness(brightness);
+//   if(lightValue <= 30)
+//   {
+//     bassOff();
+//   }
+//   else
+//   {
+//     strip.show();
+//   }
+// }
+
 void northernLightsEffect(int brightness, int counter) {
-  // Shift colors up by one pixel
+  // Shift colors up by one pixel, with delay for smooth movement
   for (int i = strip.numPixels() - 1; i > 0; i--) {
     uint32_t color = strip.getPixelColor(i - 1); // Get color of the previous pixel
     strip.setPixelColor(i, color);              // Set it to the current pixel
+    strip.show();                                // Update the strip to display the shift
+    delay(100);                                  // Pause briefly to see the shift (adjust for speed)
   }
 
   // Assign a new random color to pixel 0
   strip.setPixelColor(0, strip.Color(random(50, 200), random(0, 255), random(50, 255)));
 
   // Set brightness and display the changes
-  strip.setBrightness(brightness);
+  strip.setBrightness(brightness + 3);
   strip.show();
+  // if (lightValue <= 30) {
+  //   bassOff();
+  // } else {
+  //   strip.show();
+  //   delay(100); // Optional: Pause after the new color appears
+  // }
+}
+
+
+
+// void northernLightsEffect(int brightness, int counter) {
+//   static uint32_t targetColor = strip.Color(random(50, 200), random(0, 255), random(50, 255));
+//   static uint32_t currentColor = targetColor;
+
+//   // Smooth transition to the target color
+//   for (int i = strip.numPixels() - 1; i > 0; i--) {
+//     uint32_t prevColor = strip.getPixelColor(i - 1); 
+//     strip.setPixelColor(i, prevColor); // Shift colors down
+//   }
+
+//   // Gradually transition pixel 0 to the target color
+//   currentColor = fadeToColor(currentColor, targetColor, 10); // Smooth step of 10
+//   strip.setPixelColor(0, currentColor);
+
+//   // Randomly choose a new target color after some cycles
+//   if (counter % 50 == 0) { // Adjust frequency as needed
+//     targetColor = strip.Color(random(50, 200), random(0, 255), random(50, 255));
+//   }
+
+//   // Set brightness and display the changes
+//   strip.setBrightness(brightness);
+//   if (lightValue <= 30) {
+//     bassOff();
+//   } else {
+//     strip.show();
+//   }
+// }
+
+// Helper function for smooth color transition
+uint32_t fadeToColor(uint32_t current, uint32_t target, int step) {
+  int r = constrain((int)((current >> 16) & 0xFF) + ((int)((target >> 16) & 0xFF) - (int)((current >> 16) & 0xFF)) / step, 0, 255);
+  int g = constrain((int)((current >> 8) & 0xFF) + ((int)((target >> 8) & 0xFF) - (int)((current >> 8) & 0xFF)) / step, 0, 255);
+  int b = constrain((int)(current & 0xFF) + ((int)(target & 0xFF) - (int)(current & 0xFF)) / step, 0, 255);
+
+  return strip.Color(r, g, b);
 }
 
 
@@ -538,6 +707,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 255, 207)); // Bright white
     stripTop.setPixelColor(7, stripTop.Color(255, 255, 255)); // Bright white
     stripTop.setPixelColor(8, stripTop.Color(100, 100, 100)); // Bright white
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour >= 8 && hour < 10) // Mid-morning
   {
@@ -550,6 +720,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 170, 0));   // Fading to orange
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour >= 10 && hour < 12) // Late morning
   {
@@ -562,6 +733,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 190, 50));  // Lighter orange
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour >= 12 && hour < 14) // Midday
   {
@@ -574,6 +746,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 210, 100)); // Transition towards yellow
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour >= 14 && hour < 16) // Early afternoon
   {
@@ -586,6 +759,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 170, 0));   // Fading to orange
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour >= 16 && hour < 18) // Late afternoon
   {
@@ -598,6 +772,7 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 70, 0));    // Dark orange
     stripTop.setPixelColor(7, stripTop.Color(0, 0, 0));       // Dark - no light
     stripTop.setPixelColor(8, stripTop.Color(0, 0, 0));       // Dark - no light
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour == 18) // Sunset
   {
@@ -610,24 +785,27 @@ void setDayCycleEffect(int brightness, int hour, int minute)
     stripTop.setPixelColor(6, stripTop.Color(255, 210, 100)); // Transition towards yellow
     stripTop.setPixelColor(7, stripTop.Color(255, 255, 150)); // Brighter yellow
     stripTop.setPixelColor(8, stripTop.Color(255, 255, 207)); // Soft yellow
+    stripTop.setBrightness(brightness+2);
   }
   else if(hour < 6 || hour > 18) // Night
   {
     for (int i = 0; i < 9; i++) {
       stripTop.setPixelColor(i, stripTop.Color(0, 0, 0)); // Turn off all LEDs
     }
-    bassOff();
+    stripTop.setPixelColor(1, stripTop.Color(0, 220, 0));
+    stripTop.setBrightness(1);
+    //bassOff();
   }
 
-  stripTop.setBrightness(brightness);
+  
   stripTop.show();
 }
 
 
 // Set all LEDs to red (default)
 void setAllLEDsToRed() {
-  for (int i = 0; i < strip.numPixels(); i+= 2) {
-    strip.setPixelColor(i, strip.Color(255, 255, 220));
+  for (int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(255, 10, 10));
   }
   strip.show();
 }
